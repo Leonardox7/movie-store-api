@@ -1,0 +1,24 @@
+{
+  "name": "movie-store-api",
+  "version": "1.0.0",
+  "description": "Api for rent movies",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "mocha --timeout 100000",
+    "start": "node src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Leonardox7/movie-store-api.git"
+  },
+  "author": "Leonardo Maia",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Leonardox7/movie-store-api/issues"
+  },
+  "homepage": "https://github.com/Leonardox7/movie-store-api#readme",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^8.0.1"
+  }
+}
