@@ -39,7 +39,6 @@ describe('HttpResponse', function () {
   describe('#internalServerError', function () {
     it('should return status code 500', function () {
       const response = HttpResponse.internalServerError();
-      console.log(response)
       expect(response.statusCode).to.equal(500);
       expect(response.message).to.equal('Internal Server Error');
     });
