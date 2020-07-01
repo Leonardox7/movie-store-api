@@ -1,6 +1,7 @@
 const expect = require('chai').expect;
 const MovieService = require('../src/services/movie-service');
 
+
 const makeMovieRepositoryStub = () => {
   class MovieRepositoryStub {
     insert() {

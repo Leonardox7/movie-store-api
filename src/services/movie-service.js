@@ -7,15 +7,23 @@ class MovieService {
   }
 
   insert({ name, genre, director, amount } = {}) {
-    const id = idGenerator();
-    const movie = new Movie({ id, name, genre, director, amount });
+    const _id = idGenerator();
+    const movie = new Movie(_id, name, genre, director, amount);
     this.movieRepository.insert(movie);
-    return id;
+    return _id;
   }
 
   findAll() {
-    const movies = this.movieRepository.find({}).fetch();
-    return movies;
+    return this.movieRepository.find({}).fetch();
+  }
+
+  findById(_id) {
+    return this.movieRepository.findOne({ _id }).fetch();
+  }
+
+  findByName(name) {
+    // TODO: Criar regex
+    return this.movieRepository.find({ name }).fetch();
   }
 }
 

@@ -1,7 +1,7 @@
 class Unauthorized {
-  constructor() {
+  constructor(message) {
     this.statusCode;
-    this.message = 'Unauthorized';
+    this.message = message || 'Unauthorized';
   }
 }
 

@@ -1,8 +1,9 @@
 const HttpResponse = require('../helpers/http-response');
 
 class MovieController {
-  constructor({ movieService } = {}) {
+  constructor({ movieService, rentService } = {}) {
     this.movieService = movieService;
+    this.rentService = rentService;
   }
 
   /**
@@ -18,13 +19,23 @@ class MovieController {
       }
 
       const { name, genre, director, amount } = httpRequest.params;
-      const id = this.movieService.insert({ name, genre, director, amount });
+      const _id = this.movieService.insert({ name, genre, director, amount });
 
-      if (!id) return HttpResponse.internalServerError();
+      if (!_id) return HttpResponse.internalServerError();
 
       return HttpResponse.ok({ message: 'Movie saved !' });
     } catch (e) {
       console.log(e.message);
+      return HttpResponse.internalServerError();
+    }
+  }
+
+  stock() {
+    try {
+      const stock = this.rentService.stock();
+      if (!sotck || stock.length == 0) return HttpResponse.noContent();
+      return HttpResponse.ok({ data: stock });
+    } catch (e) {
       return HttpResponse.internalServerError();
     }
   }
@@ -36,7 +47,7 @@ class MovieController {
   findAll() {
     try {
       const movies = this.movieService.findAll();
-      return HttpResponse.ok({ result: movies });
+      return HttpResponse.ok({ data: movies });
     } catch (e) {
       console.log(e.message);
       return HttpResponse.internalServerError();

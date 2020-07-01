@@ -1,7 +1,7 @@
 class NoContent {
-  constructor() {
+  constructor(body) {
     this.statusCode = 204;
-    this.message = 'No content';
+    this.body = body || 'No content';
   }
 }
 

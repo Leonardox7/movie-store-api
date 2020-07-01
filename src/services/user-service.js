@@ -7,10 +7,18 @@ class UserService {
   }
 
   insert({ name, birthday, cpf } = {}) {
-    const id = idGenerator();
-    const user = new User({ id, name, birthday, cpf });
+    const _id = idGenerator();
+    const user = new User(_id, name, birthday, cpf);
     this.userRepository.insert(user);
-    return id;
+    return _id;
+  }
+
+  findAll() {
+    return this.userRepository.find({}).fetch();
+  }
+
+  findByCpf(cpf) {
+    return this.userRepository.findOne({ cpf });
   }
 }
 

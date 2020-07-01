@@ -23,7 +23,7 @@ describe('HttpResponse', function () {
       const response = HttpResponse.noContent();
       expect(response).to.be.an('object');
       expect(response.statusCode).to.equal(204);
-      expect(response.message).to.equal('No content');
+      expect(response.body).to.equal('No content');
     });
   });
 

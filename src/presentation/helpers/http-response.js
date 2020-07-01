@@ -11,8 +11,8 @@ class HttpResponse {
     return new Success(message);
   }
 
-  static noContent() {
-    return new NoContent();
+  static noContent(body) {
+    return new NoContent(body);
   }
 
   static badRequest(message) {
@@ -23,8 +23,8 @@ class HttpResponse {
     return new InternalServerError();
   }
 
-  static unauthorized() {
-    return new Unauthorized();
+  static unauthorized(message) {
+    return new Unauthorized(message);
   }
 }
 

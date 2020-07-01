@@ -52,4 +52,22 @@ describe('MovieController', function () {
       expect(sut.register(response.body)).to.equal('User registered !');
     });
   });
+
+  describe('#update', function () {
+    it('should return success update', function () {
+      const request = {
+        params: {
+          name: 'Leonardo',
+          birthday: '1998-10-26',
+          cpf: '15760505050',
+          phoneNumber: '31988551060',
+          gender: 'Male',
+        },
+      };
+      const { sut } = makeSut();
+      const response = sut.register(request);
+      expect(response.body).to.be.an('string');
+      expect(sut.register(response.body)).to.equal('User registered !');
+    });
+  });
 });

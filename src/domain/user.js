@@ -1,8 +1,8 @@
 class User {
-  constructor(id, name, age, cpf) {
-    this.id = id;
+  constructor(_id, name, birthday, cpf) {
+    this._id = _id;
     this.name = name;
-    this.age = age;
+    this.birthday = birthday;
     this.cpf = cpf;
   }
 }
