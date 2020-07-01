@@ -7,8 +7,7 @@ class RentHistoryService {
   }
 
   async removeByUserIdAndMoviesIdAndReturnDate(userId, moviesId) {
-    console.log();
-    await this.rentHistoryRepository.deleteMany({
+    return await this.rentHistoryRepository.deleteMany({
       userId,
       movieId: { $in: moviesId },
       returnDate: null,

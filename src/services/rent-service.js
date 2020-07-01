@@ -15,10 +15,6 @@ class RentService {
     this.momentAdapter = momentAdapter;
   }
 
-  /**
-   * @param {string} userId
-   * @param {array} movies
-   */
   async rent(userId, movies) {
     const DAYS_RETURN = 5;
     const startAt = this.momentAdapter.getDate();
@@ -80,11 +76,6 @@ class RentService {
     return _id;
   }
 
-  /**
-   * @private
-   * @param {object} args
-   * @returns {array}
-   */
   _normalizeMovies({ movies, startAt, expireAt }) {
     let hashMovies = {};
 
@@ -101,10 +92,6 @@ class RentService {
     return hashMovies;
   }
 
-  /**
-   * @param {array} movies
-   * @returns {boolean}
-   */
   async verifyStock(movies) {
     let canRent = true;
     let moviesHasNoStock = [];
@@ -131,11 +118,6 @@ class RentService {
     return { canRent, moviesHasNoStock };
   }
 
-  /**
-   * @param {string} userId
-   * @param {array} moviesId
-   * @returns {boolean}
-   */
   async canRenewSameMovie(userId, moviesId) {
     const rent = await this.rentRepository.findOne({ userId });
     if (!rent || rent.length === 0) return true;
@@ -150,10 +132,6 @@ class RentService {
     return canRenew;
   }
 
-  /**
-   * @param {string} cpf
-   * @param {array} moviesId
-   */
   async renewMovie(userId, moviesId) {
     const DAYS_RETURN = 3;
     const startAt = this.momentAdapter.getDate();
@@ -178,11 +156,6 @@ class RentService {
     return true;
   }
 
-  /**
-   * @param {string} userId
-   * @param {number} amountMoviesRent
-   * @returns {boolean}
-   */
   async exceedsMovieLimit(userId, amountMoviesRent) {
     const rent = await this.rentRepository.findOne({ userId });
     if ((!rent || rent.length === 0) && amountMoviesRent < 6) return false;
@@ -250,10 +223,6 @@ class RentService {
     );
   }
 
-  /**
-   * @param {string} cpf
-   * @returns {object}
-   */
   async findByCpf(cpf) {
     return await this.rentRepository.findOne({ cpf });
   }

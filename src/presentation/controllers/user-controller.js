@@ -25,7 +25,7 @@ class UserController {
           return HttpResponse.badRequest(`${field} is required`);
       }
 
-      const MAJORITY_AGE = 18;
+      const MAJORITY_AGE = 19;
       const { name, gender, cpf, birthday, phoneNumber } = httpRequest.params;
       const age = this.momentAdapter.diffYears(birthday);
 

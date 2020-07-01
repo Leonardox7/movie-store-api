@@ -1,65 +1,39 @@
 # movie-store-api
 
-Library will use
+deixar em ordem alfabetica
 
-- validator
-- moment
-- mongodb
-- express
+Libs utilizadas
+    - chai v4.2.0
+    - mocha v8.0.1
+    - @fnando/cpf v1.0.1
+    - dotenv v8.2.0
+    - express v4.17.1
+    - moment v2.27.0
+    - mongoose v5.9.20
 
-Arquitetura
-    src
-        - config
-        - infra
-            - mongodb
-        - domain
-        - presentation
-            - errors
-            - controllers
-            - helpers
-        - services
-            - helpers
-            - adapters
-        - repositories
-        app.js
+Rotas: 
+    Usuário
+        - Permite Atualizar.
+        - Realizar busca pelo cpf.
+        - Buscar todos os usuários.
+        - Excluir um usuário.
+        - Atualizar usuário.
+    Filme
+        - Permite inserir filmes.
+        - Buscar todos os filmes.
+        - Verificar livros dísponveis em estoque no momento.
+        - Acrescentar quantidades de livros no estoque.
+        - Buscar livro por id.
+    Aluguel
+        - Permite alugar vários filmes de acordo com a regra.
+        - Atualizar aluguel do(s) filme(s) pelo id do usuario
+        - Buscar todos os alugados.
+        - Buscar aluguel pelo id do usuário
+        - Deletar usuário.
 
+Regras de negócio
+    - Apenas usuários com mais de 18 anos pode realizar o registro.
+    - Usuário pode ficar com o filme durante 5 dias.
+    - É permitido aluguel de até 5 filmes por vez.
+    - É permitido renovar apenas 2 vezes.
 
-
-Entities Banco de dados:
-    - movies: name, genre, director, amount.
-    - users: name, gender, CPF, birthday, phoneNumber.
-    - rents: userId, startDate, endDate, returnDate.
-    - histories_rent: userId, movieId, amount, description.
-
-Rules:
-    - Apenas maiores de 18 anos podem alugar filmes.
-    - Um usuário pode alugar no máximo 5 filmes por vez.
-    - O Filme deve estar disponível em estoque.
-    - Cliente pode renovar o alguel do mesmo filme apenas 2x.
-
-
-CRUD Rent:
-    rent (get):
-
-    rent (post):
-        - Usuário pode alugar no máximo 5 filmes por vez.
-        - Filme deve estar disponível em estoque.
-
-    rent (update):
-
-    rentHistories (get):
-        
-
-CRUD Movie:
-        create (post):
-            - Adicionar filmes.
-
-        findAll (get):
-            - Buscar todos os filmes disponíveis.
-
-CRUD User: 
-        register
-
-        findByCpf
-
-        findByName
