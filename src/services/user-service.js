@@ -6,19 +6,39 @@ class UserService {
     this.userRepository = userRepository;
   }
 
-  insert({ name, birthday, cpf } = {}) {
+  async insert({ name, birthday, cpf, gender, phoneNumber } = {}) {
     const _id = idGenerator();
-    const user = new User(_id, name, birthday, cpf);
-    this.userRepository.insert(user);
+    const user = new User(_id, name, birthday, cpf, gender, phoneNumber);
+    await this.userRepository.create(user);
     return _id;
   }
 
-  findAll() {
-    return this.userRepository.find({}).fetch();
+  async update({ id, name, phoneNumber, birthday } = {}) {
+    const query = {};
+
+    if (name) query.name = name;
+    if (phoneNumber) query.phoneNumber = phoneNumber;
+    if (birthday) query.birthday = birthday;
+
+    if (!query) return null;
+
+    return await this.userRepository.updateOne({ _id: id }, query);
   }
 
-  findByCpf(cpf) {
-    return this.userRepository.findOne({ cpf });
+  async findAll() {
+    return await this.userRepository.find({});
+  }
+
+  async remove(_id) {
+    return await this.userRepository.remove({ _id });
+  }
+
+  async findById(_id) {
+    return await this.userRepository.findOne({ _id });
+  }
+
+  async findByCpf(cpf) {
+    return await this.userRepository.findOne({ cpf });
   }
 }
 

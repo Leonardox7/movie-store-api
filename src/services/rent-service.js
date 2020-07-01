@@ -1,17 +1,16 @@
 const Rent = require('../domain/rent');
-const RentHistory = require('../domain/rent-history');
-
 const idGenerator = require('./helpers/id-generator');
+const RentHistory = require('../domain/rent-history');
 
 class RentService {
   constructor({
     rentRepository,
-    rentHistoryRepository,
+    rentHistoryService,
     movieService,
     momentAdapter,
   } = {}) {
     this.rentRepository = rentRepository;
-    this.rentHistoryRepository = rentHistoryRepository;
+    this.rentHistoryService = rentHistoryService;
     this.movieService = movieService;
     this.momentAdapter = momentAdapter;
   }
@@ -20,22 +19,65 @@ class RentService {
    * @param {string} userId
    * @param {array} movies
    */
-  rent(userId, movies) {
-    const _id = idGenerator();
+  async rent(userId, movies) {
     const DAYS_RETURN = 5;
     const startAt = this.momentAdapter.getDate();
     const expireAt = this.momentAdapter.addDays(DAYS_RETURN);
+    const rent = await this.findByUserId(userId);
+
+    if (rent)
+      return this.updateMovies({ userId, rent, movies, startAt, expireAt });
+
+    return this.insert({ userId, movies, startAt, expireAt });
+  }
+
+  async updateMovies({ userId, rent, movies, startAt, expireAt }) {
+    const moviesRented = rent.movies;
+
+    movies = movies.map((movie) => {
+      if (moviesRented[movie._id] && !moviesRented[movie._id].returnDate)
+        return;
+
+      movie.expireAt = expireAt;
+      movie.startAt = startAt;
+
+      moviesRented[movie._id] = {};
+      moviesRented[movie._id].id = movie._id;
+      moviesRented[movie._id].name = movie.name;
+      moviesRented[movie._id].renewedTimes = 0;
+      moviesRented[movie._id].startAt = startAt;
+      moviesRented[movie._id].expireAt = expireAt;
+      moviesRented[movie._id].returnDate = null;
+
+      return movie;
+    });
+
+    await this.rentHistoryService.insertMany(userId, movies);
+
+    await this.rentRepository.updateOne({ userId }, { movies: moviesRented });
+
+    return rent._id;
+  }
+
+  async insert({ userId, movies, startAt, expireAt }) {
+    const _id = idGenerator();
 
     const normalizedRentMovies = this._normalizeMovies({
       movies,
       startAt,
       expireAt,
     });
-    const rent = new Rent(_id, userId, normalizedRentMovies);
+    const newRent = new Rent(_id, userId, normalizedRentMovies);
 
-    this.rentRepository.insert(rent);
-    // TODO: salvar history
-    return rent;
+    await this.rentHistoryService.insertMany({
+      userId,
+      movies,
+      returnDate: null,
+      wasRenewed: null,
+    });
+    await this.rentRepository.create(newRent);
+
+    return _id;
   }
 
   /**
@@ -63,12 +105,14 @@ class RentService {
    * @param {array} movies
    * @returns {boolean}
    */
-  verifyStock(movies) {
+  async verifyStock(movies) {
     let canRent = true;
     let moviesHasNoStock = [];
 
-    movies.forEach((choosedMovie) => {
-      const movie = this.movieService.findById(choosedMovie.id);
+    movies.forEach(async (choosedMovie) => {
+      const movie = await this.movieService.findById(choosedMovie.id);
+      if (!movie) return;
+
       const basePath = `movies.${choosedMovie.id}`;
       const returnDate = `${basePath}.returnDate`;
 
@@ -76,31 +120,31 @@ class RentService {
       query[basePath] = { $exists: true };
       query[returnDate] = null;
 
-      const rented = this.rentRepository.find(query).count();
+      const rented = await this.rentRepository.find(query).countDocuments();
+
       if (movie.amount === rented) {
         canRent = false;
         moviesHasNoStock.push(movie);
       }
     });
 
-    if (!canRent) return { canRent, moviesHasNoStock };
-
-    return { canRent };
+    return { canRent, moviesHasNoStock };
   }
 
   /**
-   * @param {string} cpf
+   * @param {string} userId
    * @param {array} moviesId
    * @returns {boolean}
    */
-  canRenewSameMovie(cpf, moviesId) {
-    const rent = this.findByCpf(cpf);
-    if (!rent) return true;
+  async canRenewSameMovie(userId, moviesId) {
+    const rent = await this.rentRepository.findOne({ userId });
+    if (!rent || rent.length === 0) return true;
 
-    const canRenew = true;
+    let canRenew = true;
+
     moviesId.forEach((movieId) => {
-      const movie = rent.movies[movieId];
-      if (movie && movie.renewedTimes > 1) canRenew = false;
+      const movieRented = rent.movies[movieId];
+      if (movieRented && movieRented.renewedTimes > 1) canRenew = false;
     });
 
     return canRenew;
@@ -110,12 +154,13 @@ class RentService {
    * @param {string} cpf
    * @param {array} moviesId
    */
-  renewMovie(cpf, moviesId) {
+  async renewMovie(userId, moviesId) {
     const DAYS_RETURN = 3;
     const startAt = this.momentAdapter.getDate();
     const expireAt = this.momentAdapter.addDays(DAYS_RETURN);
-    const rent = this.findByCpf(cpf);
-    if (!rent) return false;
+    const rent = await this.rentRepository.findOne({ userId });
+
+    if (!rent || rent.length === 0) return false;
 
     const moviesUpdated = rent.movies;
 
@@ -125,58 +170,104 @@ class RentService {
       moviesUpdated[movieId].expireAt = expireAt;
     });
 
-    this.rentRepository.updateOne({ cpf }, { $set: { movies: moviesUpdated } });
+    await this.rentRepository.updateOne(
+      { userId },
+      { $set: { movies: moviesUpdated } }
+    );
 
     return true;
   }
 
   /**
-   * @param {string} cpf
+   * @param {string} userId
    * @param {number} amountMoviesRent
    * @returns {boolean}
    */
-  exceedsMovieLimit(cpf, amountMoviesRent) {
-    const rent = this.rentRepository.find({ cpf });
-    if (!rent && amountMoviesRent < 6) return false;
+  async exceedsMovieLimit(userId, amountMoviesRent) {
+    const rent = await this.rentRepository.findOne({ userId });
+    if ((!rent || rent.length === 0) && amountMoviesRent < 6) return false;
 
-    const alreadyRent = rent.moviesId ? rent.moviesId.length : 0;
+    const keysMovies = Object.keys(rent.movies);
+    const alreadyRent = keysMovies.length;
+
     return alreadyRent + amountMoviesRent > 5;
   }
 
-  /**
-   * @param {string} cpf
-   * @returns {object}
-   */
-  findByCpf(cpf) {
-    return this.rentRepository.findOne({ cpf });
-  }
-
-  /**
-   * @param {string} cpf
-   */
-  removeByCpf(cpf) {
-    return this.rentRepository.remove({ cpf });
-  }
-
-  stock() {
-    const movies = this.movieService.findAll({});
-    const moviesRent = this.rentRepository.find({}, { movies: 1 }).fetch();
+  async stock() {
+    const movies = await this.movieService.findAll({});
+    const moviesRent = await this.rentRepository.find({}, { movies: 1 });
 
     return movies.map((movie) => {
       let moviesFiltered = [];
 
       moviesRent.forEach((movieRent) => {
         const moviesRentId = Object.keys(movieRent.movies);
-        moviesFiltered = moviesRentId.filter(
-          (movieId) => movieId === movie._id
-        );
+        moviesFiltered = moviesRentId.filter((movieId) => movieId == movie._id);
       });
+
       return {
         id: movie._id,
         name: movie.name,
-        availables: moviesFiltered.length - movie.amount,
+        availables: movie.amount - moviesFiltered.length,
       };
     });
+  }
+
+  async devolution(userId, movies) {
+    const returnDate = this.momentAdapter.getDate();
+    const rent = await this.rentRepository.findOne({ userId });
+
+    if (!rent || rent.length === 0) return null;
+
+    const rentMovies = rent.movies;
+
+    movies = movies.map((movie) => {
+      const movieRent = rentMovies[movie._id];
+      movieRent.returnDate = returnDate;
+
+      rentMovies[movie._id] = {};
+      rentMovies[movie._id].id = movieRent.id;
+      rentMovies[movie._id].name = movieRent.name;
+      rentMovies[movie._id].renewedTimes = movieRent.renewedTimes;
+      rentMovies[movie._id].startAt = movieRent.startAt;
+      rentMovies[movie._id].expireAt = movieRent.expireAt;
+      rentMovies[movie._id].returnDate = returnDate;
+
+      return movieRent;
+    });
+
+    const moviesId = movies.map((movie) => movie.id);
+    await this.rentHistoryService.removeByUserIdAndMoviesIdAndReturnDate(
+      userId,
+      moviesId
+    );
+
+    await this.rentHistoryService.insertMany(userId, movies);
+
+    return await this.rentRepository.updateOne(
+      { userId },
+      { movies: rentMovies }
+    );
+  }
+
+  /**
+   * @param {string} cpf
+   * @returns {object}
+   */
+  async findByCpf(cpf) {
+    return await this.rentRepository.findOne({ cpf });
+  }
+
+  async removeByUserId(userId) {
+    return await this.rentRepository.remove({ userId });
+  }
+
+  async findAll() {
+    return await this.rentRepository.find({});
+  }
+
+  async findByUserId(userId) {
+    return await this.rentRepository.findOne({ userId });
   }
 }
 

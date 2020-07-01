@@ -8,36 +8,42 @@ class RentController {
   }
 
   /**
-   * @param {string} cpf
+   * @param {string} userId
    * @param {array} movies
+   * @POST
    */
-  rent(httpRequest) {
+  async rent(httpRequest) {
     try {
-      if (!httpRequest.params.cpf)
-        return HttpResponse.badRequest('CPF is required');
+      if (!httpRequest.params.userId)
+        return HttpResponse.badRequest('userId is required');
 
       if (!httpRequest.params.movies || httpRequest.params.movies.length === 0)
         return HttpResponse.badRequest('movies is required');
 
-      const { cpf, moviesId } = httpRequest.params;
+      const { userId, movies } = httpRequest.params;
 
-      if (!this.cpfValidatorAdapter.isValid(cpf))
-        return HttpResponse.badRequest('Invalid cpf');
+      const exceedsMovieLimit = await this.rentService.exceedsMovieLimit(
+        userId,
+        movies.length
+      );
 
-      if (!this.userService.findByCpf(cpf))
+      const user = await this.userService.findById(userId);
+      if (!user || user.length === 0)
         return HttpResponse.unauthorized('Unauthorized user not registered');
 
-      if (this.rentService.exceedsMovieLimit(moviesId.length))
+      if (exceedsMovieLimit)
         return HttpResponse.unauthorized('Unauthorized exceeded rent limit');
 
-      const stock = this.rentService.verifyStock(movies);
-      if (!stock.canRent)
-        return HttpResponse.noContent({ moviesHasNoStock: stock.moviesHasNoStock });
+      const stock = await this.rentService.verifyStock(movies);
 
-      this.rentService.rent(cpf, moviesId);
+      if (!stock.canRent)
+        return HttpResponse.noContent({ noStock: stock.moviesHasNoStock });
+
+      await this.rentService.rent(user._id, movies);
+
       return HttpResponse.ok('Book was rent !');
     } catch (e) {
-      console.log(e.message);
+      console.error(e);
       return HttpResponse.internalServerError();
     }
   }
@@ -45,31 +51,115 @@ class RentController {
   /**
    * @param {cpf} cpf
    * @param {array} moviesId
+   * @PUT
    */
-  renew(httpRequest) {
+  async renew(httpRequest) {
     try {
-      if (!httpRequest.params.cpf)
+      if (!httpRequest.params.userId)
         return HttpResponse.badRequest('CPF is required');
+
       if (
         !httpRequest.params.moviesId ||
-        httpRequest.params.movies.length === 0
+        httpRequest.params.moviesId.length === 0
       )
-        return HttpResponse.badRequest('movies is required');
+        return HttpResponse.badRequest('moviesId is required');
 
-      const { cpf, moviesId } = httpRequest.params;
+      const { userId, moviesId } = httpRequest.params;
 
-      if (!this.cpfValidatorAdapter.isValid(cpf))
-        return HttpResponse.badRequest('Invalid cpf');
+      const user = await this.userService.findById(userId);
 
-      if (!this.userService.findByCpf(cpf))
+      if (!user)
         return HttpResponse.unauthorized('Unauthorized user not registered');
 
-      if (!this.rentService.canRenewSameMovie(cpf, moviesId))
+      const canRenew = await this.rentService.canRenewSameMovie(
+        userId,
+        moviesId
+      );
+
+      if (!canRenew)
         return HttpResponse.unauthorized('Unauthorized exceeded renew rent');
 
-      this.rentService.renewMovie(cpf, moviesId);
+      await this.rentService.renewMovie(user._id, moviesId);
+
+      return HttpResponse.ok('Book was renewd !');
     } catch (e) {
-      console.log(e.message);
+      console.error(e);
+      return HttpResponse.internalServerError();
+    }
+  }
+
+  /**
+   * @PUT
+   */
+  async devolution(httpRequest) {
+    try {
+      if (!httpRequest.params.movies || httpRequest.params.movies.length === 0)
+        return HttpResponse.badRequest('movies is required');
+
+      if (!httpRequest.params.userId)
+        return HttpResponse.badRequest('userId is required');
+
+      const { userId, movies } = httpRequest.params;
+      const rent = await this.rentService.devolution(userId, movies);
+      if (!rent) return HttpResponse.internalServerError();
+
+      return HttpResponse.ok('Book was returned !');
+    } catch (e) {
+      console.error(e);
+      return HttpResponse.internalServerError();
+    }
+  }
+
+  /**
+   * @GET
+   */
+  async findAll() {
+    try {
+      const rents = await this.rentService.findAll();
+      if (!rents || rents.length === 0) return HttpResponse.noContent();
+
+      return HttpResponse.ok(rents);
+    } catch (e) {
+      console.error(e);
+      return HttpResponse.internalServerError();
+    }
+  }
+
+  /**
+   * @GET
+   */
+  async findByUserId(httpRequest) {
+    try {
+      if (!httpRequest.params.userId)
+        return HttpResponse.badRequest('userId is requireed');
+
+      const rent = await this.rentService.findByUserId(
+        httpRequest.params.userId
+      );
+
+      if (!rent || rent.length === 0) return HttpResponse.noContent();
+
+      return HttpResponse.ok(rent);
+    } catch (e) {
+      console.error(e);
+      return HttpResponse.internalServerError();
+    }
+  }
+
+  /**
+   * @param {*} httpRequest
+   * @DELETE
+   */
+  async delete(httpRequest) {
+    try {
+      if (!httpRequest.params.id)
+        return HttpResponse.badRequest('id is required');
+
+      await this.rentService.removeByUserId(httpRequest.params.id);
+
+      return HttpResponse.ok('Rent deleted !');
+    } catch (e) {
+      console.error(e);
       return HttpResponse.internalServerError();
     }
   }

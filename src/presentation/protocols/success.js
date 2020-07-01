@@ -1,7 +1,7 @@
 class Success {
-  constructor(body) {
+  constructor(data) {
     this.statusCode = 200;
-    this.body = body;
+    this.data = data;
   }
 }
 

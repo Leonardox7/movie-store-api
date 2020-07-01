@@ -14,6 +14,14 @@ function movieRoute(app) {
     '/movie/stock',
     ExpressRouterAdapter.adapt(MovieComposer.composer(), 'stock')
   );
+  app.put(
+    '/movie/increase-amount/:id',
+    ExpressRouterAdapter.adapt(MovieComposer.composer(), 'increaseAmount')
+  );
+  app.delete(
+    '/movie/:id',
+    ExpressRouterAdapter.adapt(MovieComposer.composer(), 'delete')
+  );
 }
 
 module.exports = movieRoute;

@@ -1,11 +1,14 @@
-const RentRepository = require('../repositories/rent-repository');
+const RentRepository = require('../infra/repositories/rent-repository');
 const RentService = require('../services/rent-service');
+
+const RentHistoryService = require('../services/rent-history-service');
+const RentHistoryRepository = require('../infra/repositories/rent-history-repository');
 
 const MovieService = require('../services/movie-service');
 const UserService = require('../services/user-service');
 
-const MovieRepository = require('../repositories/user-repository');
-const UserRepository = require('../repositories/user-repository');
+const MovieRepository = require('../infra/repositories/movie-repository');
+const UserRepository = require('../infra/repositories/user-repository');
 
 const RentController = require('../presentation/controllers/rent-controller');
 
@@ -17,15 +20,14 @@ class RentComposer {
     const momentAdapter = new MomentAdapter();
     const cpfValidatorAdapter = new CpfValidatorAdapter();
 
-    const movieRepository = new MovieRepository();
-    const movieService = new MovieService({ movieRepository });
-
-    const userRepository = new UserRepository();
-    const userService = new UserService({ userRepository });
-
-    const rentRepository = new RentRepository();
+    const movieService = new MovieService({ movieRepository: MovieRepository });
+    const userService = new UserService({ userRepository: UserRepository });
+    const rentHistoryService = new RentHistoryService({
+      rentHistoryRepository: RentHistoryRepository,
+    });
     const rentService = new RentService({
-      rentRepository,
+      rentRepository: RentRepository,
+      rentHistoryService,
       movieService,
       momentAdapter,
     });

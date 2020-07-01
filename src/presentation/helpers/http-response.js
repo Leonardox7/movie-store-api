@@ -4,6 +4,7 @@ const {
   Success,
   NoContent,
   BadRequest,
+  Conflict
 } = require('../protocols');
 
 class HttpResponse {
@@ -25,6 +26,10 @@ class HttpResponse {
 
   static unauthorized(message) {
     return new Unauthorized(message);
+  }
+
+  static conflict(message) {
+    return new Conflict(message)
   }
 }
 

@@ -1,12 +1,18 @@
 class RentHistory {
-  constructor(_id, userId, moviesId, beginDate, expireAt, returnDate = null) {
+  constructor(
+    _id,
+    userId,
+    movieId,
+    startDate,
+    returnDate = null,
+    wasRenewed = null
+  ) {
     this._id = _id;
     this.userId = userId;
-    this.moviesId = moviesId;
-    this.beginDate = beginDate;
-    this.expireAt = expireAt;
+    this.movieId = movieId;
+    this.startDate = startDate;
     this.returnDate = returnDate;
-    // TODO: REVER PARA COLOCAR DESCRIPTION
+    this.wasRenewed = wasRenewed;
   }
 }
 

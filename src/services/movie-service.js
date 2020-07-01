@@ -6,24 +6,35 @@ class MovieService {
     this.movieRepository = movieRepository;
   }
 
-  insert({ name, genre, director, amount } = {}) {
+  async insert({ name, genre, director, amount } = {}) {
     const _id = idGenerator();
     const movie = new Movie(_id, name, genre, director, amount);
-    this.movieRepository.insert(movie);
+    await this.movieRepository.create(movie);
     return _id;
   }
 
-  findAll() {
-    return this.movieRepository.find({}).fetch();
+  async findAll() {
+    return await this.movieRepository.find({});
   }
 
-  findById(_id) {
-    return this.movieRepository.findOne({ _id }).fetch();
+  async findById(_id) {
+    return await this.movieRepository.findOne({ _id });
   }
 
-  findByName(name) {
-    // TODO: Criar regex
-    return this.movieRepository.find({ name }).fetch();
+  async findByName(name) {
+    const nameNd = name.toUpperCase();
+    return await this.movieRepository.find({ name_nd: nameNd });
+  }
+
+  async increaseAmount(_id, amount) {
+    return await this.movieRepository.updateOne(
+      { _id },
+      { $inc: { amount: amount } }
+    );
+  }
+
+  async delete(_id) {
+    return await this.movieRepository.remove({ _id });
   }
 }
 

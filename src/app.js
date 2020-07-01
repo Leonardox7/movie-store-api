@@ -1,16 +1,19 @@
+require('dotenv').config({ path: './src/config/.env' });
+
+const MongoDbHelper = require('./infra/helpers/mongodb-helper');
+const setupMiddlewares = require('./config/middlewares/setup-middlewares');
+const setupRoutes = require('./routes/setup-routes');
 const router = require('express').Router();
 const express = require('express');
 const app = express();
-const useRouter = require('./routes/user-router');
+const PORT = process.env.PORT || 8085;
 
-app.use((req, res, next) => {
-  res.set('access-control-allow-origin', '*');
-  res.set('access-control-allow-methods', '*');
-  res.set('access-control-allow-headers', '*');
-  next();
-});
-app.use('/api', router);
-useRouter(app);
-app.listen(8085, () =>
-  console.log(`Example app listening at http://localhost:${8085}`)
-);
+MongoDbHelper.connect()
+  .then(() => {
+    setupMiddlewares(app);
+    setupRoutes(app, router);
+    app.listen(PORT, () => console.log(`App listening at port: ${PORT}`));
+  })
+  .catch(() => {
+    MongoDbHelper.disconnect();
+  });

@@ -1,6 +1,6 @@
 const UserService = require('../services/user-service');
 
-const UserRepository = require('../repositories/user-repository');
+const UserRepository = require('../infra/repositories/user-repository');
 
 const UserController = require('../presentation/controllers/user-controller');
 
@@ -14,8 +14,7 @@ class UserComposer {
     const cpfValidatorAdapter = new CpfValidatorAdapter();
     const nameValidator = new NameValidator();
 
-    const userRepository = new UserRepository();
-    const userService = new UserService({ userRepository });
+    const userService = new UserService({ userRepository: UserRepository });
 
     return new UserController({
       userService,

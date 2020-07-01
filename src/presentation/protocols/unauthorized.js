@@ -1,6 +1,6 @@
 class Unauthorized {
   constructor(message) {
-    this.statusCode;
+    this.statusCode = 401;
     this.message = message || 'Unauthorized';
   }
 }

@@ -7,10 +7,9 @@ class MovieController {
   }
 
   /**
-   * @public
-   * @post
+   * @POST
    */
-  create(httpRequest) {
+  async create(httpRequest) {
     try {
       const required = ['name', 'genre', 'director', 'amount'];
       for (const field of required) {
@@ -19,37 +18,92 @@ class MovieController {
       }
 
       const { name, genre, director, amount } = httpRequest.params;
-      const _id = this.movieService.insert({ name, genre, director, amount });
+
+      const movie = await this.movieService.findByName(name);
+
+      if (movie && movie.length > 0)
+        return HttpResponse.conflict('Movie already registered.');
+
+      const _id = await this.movieService.insert({
+        name,
+        genre,
+        director,
+        amount,
+      });
 
       if (!_id) return HttpResponse.internalServerError();
 
-      return HttpResponse.ok({ message: 'Movie saved !' });
+      return HttpResponse.ok('Movie saved !');
     } catch (e) {
-      console.log(e.message);
-      return HttpResponse.internalServerError();
-    }
-  }
-
-  stock() {
-    try {
-      const stock = this.rentService.stock();
-      if (!sotck || stock.length == 0) return HttpResponse.noContent();
-      return HttpResponse.ok({ data: stock });
-    } catch (e) {
+      console.error(e.message);
       return HttpResponse.internalServerError();
     }
   }
 
   /**
-   * @public
-   * @get
+   * @PUT
    */
-  findAll() {
+  async increaseAmount(httpRequest) {
     try {
-      const movies = this.movieService.findAll();
-      return HttpResponse.ok({ data: movies });
+      if (!httpRequest.params.id)
+        return HttpResponse.badRequest('id is required');
+
+      if (!httpRequest.params.amount)
+        return HttpResponse.badRequest('amount is required');
+
+      const { id, amount } = httpRequest.params;
+
+      await this.movieService.increaseAmount(id, amount);
+
+      return HttpResponse.ok('Stock updated !');
     } catch (e) {
-      console.log(e.message);
+      console.error(e);
+      return HttpResponse.internalServerError();
+    }
+  }
+
+  /**
+   * @GET
+   */
+  async stock() {
+    try {
+      const stock = await this.rentService.stock();
+      if (!stock || stock.length == 0) return HttpResponse.noContent();
+
+      return HttpResponse.ok(stock);
+    } catch (e) {
+      console.error(e);
+      return HttpResponse.internalServerError();
+    }
+  }
+
+  /**
+   * @GET
+   */
+  async findAll() {
+    try {
+      const movies = await this.movieService.findAll();
+
+      return HttpResponse.ok(movies);
+    } catch (e) {
+      console.error(e);
+      return HttpResponse.internalServerError();
+    }
+  }
+
+  /**
+   * @DELETE
+   */
+  async delete() {
+    try {
+      if (!httpRequest.params.id)
+        return HttpResponse.badRequest('id is required');
+
+      await this.movieService.delete(httpRequest.params.id);
+
+      return HttpResponse.ok('Movie deleted !');
+    } catch (e) {
+      console.error(e);
       return HttpResponse.internalServerError();
     }
   }
