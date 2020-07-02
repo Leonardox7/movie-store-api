@@ -1,6 +1,5 @@
 const Rent = require('../domain/rent');
 const idGenerator = require('./helpers/id-generator');
-const RentHistory = require('../domain/rent-history');
 
 class RentService {
   constructor({
@@ -29,8 +28,9 @@ class RentService {
 
   async updateMovies({ userId, rent, movies, startAt, expireAt }) {
     const moviesRented = rent.movies;
+    const rentHistoryMoviesList = [];
 
-    movies = movies.map((movie) => {
+    movies.forEach((movie) => {
       if (moviesRented[movie._id] && !moviesRented[movie._id].returnDate)
         return;
 
@@ -45,10 +45,10 @@ class RentService {
       moviesRented[movie._id].expireAt = expireAt;
       moviesRented[movie._id].returnDate = null;
 
-      return movie;
+      rentHistoryMoviesList.push(movie);
     });
 
-    await this.rentHistoryService.insertMany(userId, movies);
+    await this.rentHistoryService.insertMany(userId, rentHistoryMoviesList);
 
     await this.rentRepository.updateOne({ userId }, { movies: moviesRented });
 
@@ -65,12 +65,12 @@ class RentService {
     });
     const newRent = new Rent(_id, userId, normalizedRentMovies);
 
-    await this.rentHistoryService.insertMany({
-      userId,
-      movies,
-      returnDate: null,
-      wasRenewed: null,
+    const moviesHistoryAdapted = movies.map((movie) => {
+      movie.startAt = startAt;
+      return movie;
     });
+
+    await this.rentHistoryService.insertMany(userId, moviesHistoryAdapted);
     await this.rentRepository.create(newRent);
 
     return _id;

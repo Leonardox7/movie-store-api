@@ -3,14 +3,14 @@ class RentHistory {
     _id,
     userId,
     movieId,
-    startDate,
+    startAt,
     returnDate = null,
     wasRenewed = null
   ) {
     this._id = _id;
     this.userId = userId;
     this.movieId = movieId;
-    this.startDate = startDate;
+    this.startAt = startAt;
     this.returnDate = returnDate;
     this.wasRenewed = wasRenewed;
   }

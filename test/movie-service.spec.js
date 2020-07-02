@@ -1,32 +1,50 @@
+require('dotenv').config({ path: './src/config/.env' });
 const expect = require('chai').expect;
 const MovieService = require('../src/services/movie-service');
+const MovieRepository = require('../src/infra/repositories/movie-repository');
+const MongoDbHelper = require('../src/infra/helpers/mongodb-helper');
 
+describe('MovieService', () => {
+  before(async () => {
+    await MongoDbHelper.connect();
+  });
 
-const makeMovieRepositoryStub = () => {
-  class MovieRepositoryStub {
-    insert() {
-      return true;
-    }
-  }
-  return new MovieRepositoryStub();
-};
-
-const makeSut = () => {
-  const MovieRepositoryStub = makeMovieRepositoryStub();
-  return new MovieService({ movieRepository: MovieRepositoryStub });
-};
-
-describe('MovieService', function () {
-  describe('#insert', function () {
-    it('should return id', function () {
-      const sut = makeSut();
+  describe('#insert', () => {
+    it('should return id', async () => {
+      const sut = new MovieService({ movieRepository: MovieRepository });
       const params = {
-        name: 'Leonardo',
-        birthday: '1998-10-26',
-        cpf: '15760505050',
-        phoneNumber: '31988888850',
+        name: 'X-man no evolution',
+        genre: 'Comedy',
+        director: 'unknown',
+        amount: 10,
       };
-      expect(sut.insert(params)).to.be.an('string');
+      const movie = await sut.insert(params);
+
+      expect(movie).to.be.an('string');
     });
+  });
+
+  describe('#increaseAmount', () => {
+    it('should return ok updated', async () => {
+      const sut = new MovieService({ movieRepository: MovieRepository });
+      const foundedMovie = sut.findByName('X-man no evolution');
+      const movie = await sut.increaseAmount(foundedMovie._id, 20);
+      expect(movie).to.be.an('object');
+      expect(movie.ok).to.equal(1);
+    });
+  });
+
+  describe('#remove', () => {
+    it('should remove movie', async () => {
+      const sut = new MovieService({ movieRepository: MovieRepository });
+      const foundedMovie = sut.findByName('X-man no evolution');
+      const movie = await sut.remove(foundedMovie._id);
+      expect(movie).to.be.an('object');
+      expect(movie.ok).to.equal(1);
+    });
+  });
+
+  after(async () => {
+    await MongoDbHelper.disconnect();
   });
 });

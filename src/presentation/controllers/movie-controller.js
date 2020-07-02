@@ -99,7 +99,7 @@ class MovieController {
       if (!httpRequest.params.id)
         return HttpResponse.badRequest('id is required');
 
-      await this.movieService.delete(httpRequest.params.id);
+      await this.movieService.remove(httpRequest.params.id);
 
       return HttpResponse.ok('Movie deleted !');
     } catch (e) {

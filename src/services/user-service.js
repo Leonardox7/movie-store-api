@@ -30,7 +30,7 @@ class UserService {
   }
 
   async remove(_id) {
-    return await this.userRepository.remove({ _id });
+    return await this.userRepository.deleteOne({ _id });
   }
 
   async findById(_id) {

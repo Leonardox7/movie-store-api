@@ -1,7 +1,7 @@
 class NoContent {
-  constructor(body) {
+  constructor(data) {
     this.statusCode = 204;
-    this.body = body || 'No content';
+    this.data = data || 'No content';
   }
 }
 

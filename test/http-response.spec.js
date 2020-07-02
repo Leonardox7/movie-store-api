@@ -7,14 +7,14 @@ describe('HttpResponse', function () {
       const response = HttpResponse.ok();
       expect(response).to.be.an('object');
       expect(response.statusCode).to.equal(200);
-      expect(response.body).to.equal('');
+      expect(response.data).to.equal('');
     });
 
     it('should return status code 200 with message', function () {
       const response = HttpResponse.ok('Created movie !');
       expect(response).to.be.an('object');
       expect(response.statusCode).to.equal(200);
-      expect(response.body).to.equal('Created movie !');
+      expect(response.data).to.equal('Created movie !');
     });
   });
 
@@ -23,7 +23,7 @@ describe('HttpResponse', function () {
       const response = HttpResponse.noContent();
       expect(response).to.be.an('object');
       expect(response.statusCode).to.equal(204);
-      expect(response.body).to.equal('No content');
+      expect(response.data).to.equal('No content');
     });
   });
 

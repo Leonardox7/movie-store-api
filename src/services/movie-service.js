@@ -33,8 +33,8 @@ class MovieService {
     );
   }
 
-  async delete(_id) {
-    return await this.movieRepository.remove({ _id });
+  async remove(_id) {
+    return await this.movieRepository.deleteOne({ _id });
   }
 }
 

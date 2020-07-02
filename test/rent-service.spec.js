@@ -1,80 +1,57 @@
+require('dotenv').config({ path: './src/config/.env' });
 const expect = require('chai').expect;
+const MongoDbHelper = require('../src/infra/helpers/mongodb-helper');
 
 const movieSeed = require('./mocks/movie-seed');
 const rentSeed = require('./mocks/rent-seed');
 const userSeed = require('./mocks/user-seed');
 
-// rentRepository,
-// rentHistoryRepository,
-// movieService,
-// momentAdapter,
-
 const MomentAdapter = require('../src/utils/adapters/moment-adapter');
 const MovieService = require('../src/services/movie-service');
+const MovieRepository = require('../src/infra/repositories/movie-repository');
+
+const RentHistoryRepository = require('../src/infra/repositories/rent-history-repository');
+const RentHistoryService = require('../src/services/rent-history-service');
+
+const RentRepository = require('../src/infra/repositories/rent-repository');
 const RentService = require('../src/services/rent-service');
 
-const makeMovieRepositoryStub = () => {
-  class MovieRepositoryStub {
-    insert() {
-      return true;
-    }
-
-    find() {
-      return {
-        fetch: () => movieSeed,
-      };
-    }
-
-    findOne({ _id }) {
-      return {
-        fetch: () => movieSeed.find((movie) => movie._id === _id),
-      };
-    }
-  }
-  return new MovieRepositoryStub();
-};
-
-const makeRentRepositoryStub = () => {
-  class RentRepositoryStub {
-    find() {
-      return {
-        fetch: () => rentSeed,
-      };
-    }
-    findOne(cpf) {
-      return {
-        fetch: () => rentSeed.find((rent) => rent.cpf === cpf),
-      };
-    }
-
-    insert() {
-      return true;
-    }
-  }
-
-  return new RentRepositoryStub();
-};
+const UserRepository = require('../src/infra/repositories/user-repository');
+const UserService = require('../src/services/user-service');
 
 const makeSut = () => {
-  const rentRepositoryStub = makeRentRepositoryStub();
-  const movieRepositoryStub = makeMovieRepositoryStub();
-
+  const movieServiceStub = new MovieService({
+    movieRepository: MovieRepository,
+  });
+  const userServiceStub = new UserService({ userRepository: UserRepository });
+  const rentHistoryStub = new RentHistoryService({
+    rentHistoryRepository: RentHistoryRepository,
+  });
+  const momentAdapter = new MomentAdapter();
   const sut = new RentService({
-    rentRepository: rentRepositoryStub,
-    movieService: new MovieService({ movieRepository: movieRepositoryStub }),
-    momentAdapter: new MomentAdapter(),
+    rentRepository: RentRepository,
+    rentHistoryService: rentHistoryStub,
+    movieService: movieServiceStub,
+    momentAdapter: momentAdapter,
   });
 
   return {
     sut,
-    rentRepositoryStub,
-    movieRepositoryStub,
+    movieServiceStub,
+    userServiceStub,
   };
 };
 
-describe('Rent', function () {
-  describe('#rent', function () {
-    it('should return success rent', function () {
+describe('RentService', () => {
+  before(async () => {
+    await MongoDbHelper.connect();
+    const { movieServiceStub, userServiceStub } = makeSut();
+    movieSeed.forEach((movie) => movieServiceStub.insert(movie));
+    userSeed.forEach((user) => userServiceStub.insert(user));
+  });
+
+  describe('#rent', () => {
+    it('should return success rent', async () => {
       const userId = 'xza8895A5AA';
       const movies = [
         {
@@ -87,59 +64,40 @@ describe('Rent', function () {
         },
       ];
       const { sut } = makeSut();
-      const response = sut.rent(userId, movies);
-      expect(response).to.be.an('object');
-      expect(response).to.have.deep.keys({ _id: 1, userId: 1, movies: 1 });
+      const response = await sut.rent(userId, movies);
+      expect(response).to.be.an('string');
     });
+  });
 
-    describe('#stock', function () {
-      it('should return success rent', function () {
-        const movies = [
-          {
-            id: 'abcd',
-            name: 'Imbatível em redenção 3',
-            renewedTimes: 0,
-            startAt: '2020-07-03',
-            expireAt: '2020-07-08',
-            returnDate: null,
-          },
-        ];
-        // const { sut, rentRepositoryStub } = makeSut();
+  describe('#stock', () => {
+    it('should return array with all movies with key availables', async () => {
+      const { sut } = makeSut();
+      const moviesInStock = await sut.stock();
 
-        // expect(response).to.be.an('object');
-        // expect(response).to.have.deep.keys({ canRent: 1, moviesHasNoStock: 1 });
+      expect(moviesInStock).to.be.an('array');
+
+      moviesInStock.forEach((movie) => {
+        expect(movie).to.have.deep.keys({ id: 1, name: 1, availables: 1 });
       });
     });
+  });
 
-    //   describe('#renew', function () {
-    //     it('should return success renew', function () {
-    //       const request = {
-    //         params: {
-    //           cpf: '',
-    //           moviesId: [],
-    //         },
-    //       };
-    //       const { sut } = makeSut();
-    //       const response = sut.rent(request);
-    //       expect(response.body).to.be.an('string');
-    //       expect(sut.register(response.body)).to.equal(
-    //         'Unauthorized user not registered'
-    //       );
-    //     });
+  describe('#renewMovie', () => {
+    it('should return rewnew movie true', async () => {
+      const userId = 'xza8895A5AA';
+      const moviesId = ['abcd'];
+      const { sut } = makeSut();
+      const response = await sut.renewMovie(userId, moviesId);
 
-    //     it('should return unauthorized exceeded renew', function () {
-    //       const request = {
-    //         params: {
-    //           cpf: '',
-    //           moviesId: [],
-    //         },
-    //       };
-    //       const { sut } = makeSut();
-    //       const response = sut.rent(request);
-    //       expect(response.body).to.be.an('string');
-    //       expect(sut.register(response.body)).to.equal(
-    //         'Unauthorized user not registered'
-    //       );
-    //     });
+      expect(response).to.be.an('boolean');
+      expect(response).to.equal(true);
+    });
+  });
+
+  after(async () => {
+    await MongoDbHelper.disconnect();
+    const { movieServiceStub, userServiceStub } = makeSut();
+    movieSeed.forEach((movie) => movieServiceStub.remove(movie._id));
+    userSeed.forEach((user) => userServiceStub.remove(user._id));
   });
 });
