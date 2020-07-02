@@ -7,7 +7,7 @@ function rentRoute(app) {
     ExpressRouterAdapter.adapt(RentComposer.composer(), 'rent')
   );
   app.put(
-    '/rent/renew-by-userId/userId:',
+    '/rent/renew-by-userId/:userId',
     ExpressRouterAdapter.adapt(RentComposer.composer(), 'renew')
   );
   app.put(

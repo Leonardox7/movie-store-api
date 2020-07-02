@@ -57,7 +57,6 @@ class RentService {
 
   async insert({ userId, movies, startAt, expireAt }) {
     const _id = idGenerator();
-
     const normalizedRentMovies = this._normalizeMovies({
       movies,
       startAt,
@@ -92,15 +91,15 @@ class RentService {
     return hashMovies;
   }
 
-  async verifyStock(movies) {
+  async verifyStockByMovies(movies) {
     let canRent = true;
     let moviesHasNoStock = [];
 
-    movies.forEach(async (choosedMovie) => {
-      const movie = await this.movieService.findById(choosedMovie.id);
+    for (const choosedMovie of movies) {
+      const movie = await this.movieService.findById(choosedMovie._id);
       if (!movie) return;
 
-      const basePath = `movies.${choosedMovie.id}`;
+      const basePath = `movies.${choosedMovie._id}`;
       const returnDate = `${basePath}.returnDate`;
 
       const query = {};
@@ -113,7 +112,7 @@ class RentService {
         canRent = false;
         moviesHasNoStock.push(movie);
       }
-    });
+    }
 
     return { canRent, moviesHasNoStock };
   }
@@ -137,11 +136,9 @@ class RentService {
     const startAt = this.momentAdapter.getDate();
     const expireAt = this.momentAdapter.addDays(DAYS_RETURN);
     const rent = await this.rentRepository.findOne({ userId });
-
-    if (!rent || rent.length === 0) return false;
+    if (!rent) return false;
 
     const moviesUpdated = rent.movies;
-
     moviesId.forEach((movieId) => {
       moviesUpdated[movieId].renewedTimes++;
       moviesUpdated[movieId].startAt = startAt;
@@ -160,10 +157,17 @@ class RentService {
     const rent = await this.rentRepository.findOne({ userId });
     if ((!rent || rent.length === 0) && amountMoviesRent < 6) return false;
 
-    const keysMovies = Object.keys(rent.movies);
-    const alreadyRent = keysMovies.length;
+    const moviesNotReturned = [];
+    const moviesRented = rent.movies;
+    const keysMovies = Object.keys(moviesRented);
 
-    return alreadyRent + amountMoviesRent > 5;
+    for (const key of keysMovies) {
+      if (!moviesRented[key].returnDate) moviesNotReturned.push(key);
+    }
+
+    const alreadyRent = moviesNotReturned.length;
+
+    return alreadyRent + amountMoviesRent > 4;
   }
 
   async stock() {
@@ -173,10 +177,10 @@ class RentService {
     return movies.map((movie) => {
       let moviesFiltered = [];
 
-      moviesRent.forEach((movieRent) => {
+      for (const movieRent of moviesRent) {
         const moviesRentId = Object.keys(movieRent.movies);
         moviesFiltered = moviesRentId.filter((movieId) => movieId == movie._id);
-      });
+      }
 
       return {
         id: movie._id,
@@ -189,8 +193,7 @@ class RentService {
   async devolution(userId, movies) {
     const returnDate = this.momentAdapter.getDate();
     const rent = await this.rentRepository.findOne({ userId });
-
-    if (!rent || rent.length === 0) return null;
+    if (!rent) return null;
 
     const rentMovies = rent.movies;
 

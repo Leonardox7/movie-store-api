@@ -10,4 +10,6 @@ const movieSchema = new Schema({
   amount: { type: Number, required: true },
 });
 
+movieSchema.index({ name_nd: 1 });
+
 module.exports = movieSchema;

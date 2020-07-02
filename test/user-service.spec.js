@@ -1,6 +1,6 @@
 require('dotenv').config({ path: './src/config/.env' });
-
 const expect = require('chai').expect;
+
 const UserService = require('../src/services/user-service');
 const UserRepository = require('../src/infra/repositories/user-repository');
 const MongoDbHelper = require('../src/infra/helpers/mongodb-helper');
@@ -29,7 +29,7 @@ describe('UserService', () => {
   describe('#update', () => {
     it('should update user', async () => {
       const sut = new UserService({ userRepository: UserRepository });
-      const foundedUser = sut.findByCpf('15760505050');
+      const foundedUser = await sut.findByCpf('15760505050');
       const params = {
         id: foundedUser._id,
         birthday: '1998-10-21',
@@ -42,10 +42,20 @@ describe('UserService', () => {
     });
   });
 
+  describe('#findAll', () => {
+    it('should return all users', async () => {
+      const sut = new UserService({ userRepository: UserRepository });
+      const users = await sut.findAll();
+
+      expect(users).to.be.an('array');
+      expect(users.length).to.equal(1);
+    });
+  });
+
   describe('#remove', () => {
     it('should remove user', async () => {
       const sut = new UserService({ userRepository: UserRepository });
-      const foundedUser = sut.findByCpf('15760505050');
+      const foundedUser = await sut.findByCpf('15760505050');
       const user = await sut.remove(foundedUser._id);
 
       expect(user).to.be.an('object');

@@ -10,4 +10,6 @@ const userShema = new Schema({
   gender: { type: String, required: true },
 });
 
+userShema.index({ cpf: 1 });
+
 module.exports = userShema;

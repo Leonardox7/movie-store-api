@@ -12,8 +12,8 @@ class HttpResponse {
     return new Success(message);
   }
 
-  static noContent(body) {
-    return new NoContent(body);
+  static noContent(data) {
+    return new NoContent(data);
   }
 
   static badRequest(message) {

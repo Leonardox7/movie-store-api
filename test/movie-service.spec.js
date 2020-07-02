@@ -1,4 +1,5 @@
 require('dotenv').config({ path: './src/config/.env' });
+
 const expect = require('chai').expect;
 const MovieService = require('../src/services/movie-service');
 const MovieRepository = require('../src/infra/repositories/movie-repository');
@@ -29,6 +30,7 @@ describe('MovieService', () => {
       const sut = new MovieService({ movieRepository: MovieRepository });
       const foundedMovie = sut.findByName('X-man no evolution');
       const movie = await sut.increaseAmount(foundedMovie._id, 20);
+
       expect(movie).to.be.an('object');
       expect(movie.ok).to.equal(1);
     });
@@ -39,6 +41,7 @@ describe('MovieService', () => {
       const sut = new MovieService({ movieRepository: MovieRepository });
       const foundedMovie = sut.findByName('X-man no evolution');
       const movie = await sut.remove(foundedMovie._id);
+
       expect(movie).to.be.an('object');
       expect(movie.ok).to.equal(1);
     });

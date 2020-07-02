@@ -13,14 +13,13 @@ class UserService {
     return _id;
   }
 
-  async update({ id, name, phoneNumber, birthday } = {}) {
+  async update({ id, name, phoneNumber, birthday, cpf } = {}) {
     const query = {};
 
     if (name) query.name = name;
     if (phoneNumber) query.phoneNumber = phoneNumber;
     if (birthday) query.birthday = birthday;
-
-    if (!query) return null;
+    if (cpf) query.cpf = cpf;
 
     return await this.userRepository.updateOne({ _id: id }, query);
   }

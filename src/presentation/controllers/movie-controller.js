@@ -94,7 +94,7 @@ class MovieController {
   /**
    * @DELETE
    */
-  async delete() {
+  async delete(httpRequest) {
     try {
       if (!httpRequest.params.id)
         return HttpResponse.badRequest('id is required');

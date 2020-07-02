@@ -8,9 +8,14 @@ class MovieService {
 
   async insert({ name, genre, director, amount } = {}) {
     const _id = idGenerator();
-    const movie = new Movie(_id, name, genre, director, amount);
+    const name_nd = this._normalizeName(name);
+    const movie = new Movie(_id, name, name_nd, genre, director, amount);
     await this.movieRepository.create(movie);
     return _id;
+  }
+
+  _normalizeName(name) {
+    return name.replace(/[^\w\s]/gi, '').toUpperCase();
   }
 
   async findAll() {

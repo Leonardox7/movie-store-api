@@ -8,8 +8,6 @@ class RentController {
   }
 
   /**
-   * @param {string} userId
-   * @param {array} movies
    * @POST
    */
   async rent(httpRequest) {
@@ -34,10 +32,8 @@ class RentController {
       if (exceedsMovieLimit)
         return HttpResponse.unauthorized('Unauthorized exceeded rent limit');
 
-      const stock = await this.rentService.verifyStock(movies);
-
-      if (!stock.canRent)
-        return HttpResponse.noContent({ noStock: stock.moviesHasNoStock });
+      const stock = await this.rentService.verifyStockByMovies(movies);
+      if (!stock.canRent) return HttpResponse.noContent();
 
       await this.rentService.rent(user._id, movies);
 
@@ -49,8 +45,6 @@ class RentController {
   }
 
   /**
-   * @param {cpf} cpf
-   * @param {array} moviesId
    * @PUT
    */
   async renew(httpRequest) {
@@ -79,7 +73,8 @@ class RentController {
       if (!canRenew)
         return HttpResponse.unauthorized('Unauthorized exceeded renew rent');
 
-      await this.rentService.renewMovie(user._id, moviesId);
+      const wasRenew = await this.rentService.renewMovie(user._id, moviesId);
+      if (!wasRenew) return HttpResponse.internalServerError();
 
       return HttpResponse.ok('Book was renewd !');
     } catch (e) {
@@ -147,7 +142,6 @@ class RentController {
   }
 
   /**
-   * @param {*} httpRequest
    * @DELETE
    */
   async delete(httpRequest) {

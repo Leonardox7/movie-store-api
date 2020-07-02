@@ -6,20 +6,22 @@ class UserController {
     momentAdapter,
     cpfValidatorAdapter,
     nameValidator,
+    phoneNumberValidator,
   } = {}) {
     this.userService = userService;
     this.momentAdapter = momentAdapter;
     this.cpfValidatorAdapter = cpfValidatorAdapter;
     this.nameValidator = nameValidator;
+    this.phoneNumberValidator = phoneNumberValidator;
   }
 
   /**
-   * @param {object} httpRequest
    * @POST
    */
   async register(httpRequest) {
     try {
       const required = ['name', 'gender', 'cpf', 'birthday', 'phoneNumber'];
+
       for (const field of required) {
         if (!httpRequest.params[field])
           return HttpResponse.badRequest(`${field} is required`);
@@ -28,6 +30,9 @@ class UserController {
       const MAJORITY_AGE = 19;
       const { name, gender, cpf, birthday, phoneNumber } = httpRequest.params;
       const age = this.momentAdapter.diffYears(birthday);
+
+      if (!this.phoneNumberValidator.isValid(phoneNumber))
+        return HttpResponse.badRequest('Invalid phoneNumber');
 
       if (!this.nameValidator.isValid(name))
         return HttpResponse.badRequest('Invalid name');
@@ -42,7 +47,7 @@ class UserController {
         return HttpResponse.unauthorized('Not Authorized underage user');
 
       const user = await this.userService.findByCpf(cpf);
-      if (user && user.length > 0)
+      if (user)
         return HttpResponse.conflict('Conflict user already registered');
 
       const _id = await this.userService.insert({
@@ -63,8 +68,6 @@ class UserController {
   }
 
   /**
-   *
-   * @param {object} httpRequest
    * @PUT
    */
   async update(httpRequest) {
@@ -90,13 +93,20 @@ class UserController {
       )
         return HttpResponse.badRequest('Invalid name');
 
-      const { id, cpf, birthday, name } = httpRequest.params;
+      if (
+        httpRequest.params.phoneNumber &&
+        !this.phoneNumberValidator.isValid(httpRequest.params.phoneNumber)
+      )
+        return HttpResponse.badRequest('Invalid phoneNumber');
+
+      const { id, cpf, birthday, name, phoneNumber } = httpRequest.params;
 
       const updated = await this.userService.update({
         id,
         cpf,
         birthday,
         name,
+        phoneNumber,
       });
 
       if (!updated) return HttpResponse.internalServerError();
@@ -107,9 +117,8 @@ class UserController {
       return HttpResponse.internalServerError();
     }
   }
+
   /**
-   *
-   * @param {object} httpRequest { params: { id } }
    * @DELETE
    */
   async delete(httpRequest) {
@@ -142,7 +151,6 @@ class UserController {
   }
 
   /**
-   * @param {*} httpRequest
    * @GET
    */
   async findByCpf(httpRequest) {

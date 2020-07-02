@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 
 class MongoDbHelper {
   async connect() {
-    this.client = await mongoose.connect(process.env.MONGO_URL, {
+    const URL = this._getEnvironmentUrl();
+    this.client = await mongoose.connect(URL, {
       useNewUrlParser: true,
+      useCreateIndex: true,
     });
   }
 
@@ -19,6 +21,13 @@ class MongoDbHelper {
 
   getSchema() {
     return mongoose.Schema;
+  }
+
+  _getEnvironmentUrl() {
+    let url = process.env.MONGO_URL_TEST;
+    if (process.env.ENVIRONMENT === 'prod') url = process.env.MONGO_URL;
+
+    return url;
   }
 }
 

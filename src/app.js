@@ -12,7 +12,11 @@ MongoDbHelper.connect()
   .then(() => {
     setupMiddlewares(app);
     setupRoutes(app, router);
-    app.listen(PORT, () => console.log(`App listening at port: ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(
+        `App listening at port: ${PORT} | Environment: ${process.env.ENVIRONMENT}`
+      )
+    );
   })
   .catch(() => {
     MongoDbHelper.disconnect();

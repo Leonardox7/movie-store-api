@@ -10,4 +10,8 @@ const rentHistorySchema = new Schema({
   wasRenewed: { type: Boolean, required: false },
 });
 
+rentHistorySchema.index({ userId: 1, movieId: 1 });
+rentHistorySchema.index({ userId: 1, movieId: 1, returnDate: 1 });
+rentHistorySchema.index({ userId: 1 });
+
 module.exports = rentHistorySchema;

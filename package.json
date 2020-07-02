@@ -4,7 +4,8 @@
   "description": "Api for rent movies",
   "main": "src/main.js",
   "scripts": {
-    "test": "mocha --timeout 100000 --quiet",
+    "test": "nyc mocha --timeout 60000 --quiet",
+    "coverage": "nyc npm test",
     "start": "node src/app.js"
   },
   "repository": {
@@ -19,7 +20,9 @@
   "homepage": "https://github.com/Leonardox7/movie-store-api#readme",
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^8.0.1"
+    "istanbul": "^0.4.5",
+    "mocha": "^8.0.1",
+    "nyc": "^15.1.0"
   },
   "dependencies": {
     "@fnando/cpf": "^1.0.1",
