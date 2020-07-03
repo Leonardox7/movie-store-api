@@ -13,11 +13,14 @@
 
 ## Instalação
 
-
 ```bash
 npm install
 ```
+## Execução
 
+```bash
+npm start
+```
 ## Testes
 
 ```bash
