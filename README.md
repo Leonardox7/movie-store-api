@@ -38,9 +38,9 @@ npm test
    #### Filme
    - Permite inserir filmes.
    - Buscar todos os filmes.
-   - Verificar livros dísponveis em estoque no momento.
-   - Acrescentar quantidades de livros no estoque.
-   - Buscar livro por id.
+   - Verificar filmes dísponveis em estoque no momento.
+   - Acrescentar quantidades de filmes no estoque.
+   - Buscar filme por id.
   
 #### Aluguel    
    - Permite alugar vários filmes de acordo com a regra.
